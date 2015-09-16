@@ -7,7 +7,19 @@ var letters = [];
 var knownLetters = 0;
 
 var score = 0;
-var power = 100; // Game over when power reaches zero!
+// var power = 100; // Game over when power reaches zero!
+var power = 6; // Game over when power reaches zero!
+
+// function pushReceived(info) {
+//   console.log("registerListener - "+info.alert);
+//   alert("got a push msg!" + info.alert);
+// }
+
+function alertNotification(message) {
+
+    IBMBluemix.getLogger().info("Received notification");
+    alert(JSON.stringify(message));
+}
 
 function changeScore(s) {
   score += s;
@@ -24,11 +36,22 @@ function saveScore(name, score) {
 
 function changePower(p) {
   power += p;
-  if (power > 100) {
-    power = 100;
+  if (power >= 6) {
+    $('#power-high').removeClass('ion-ios-heart-outline').addClass('ion-ios-heart');
+    power = 6;
+  }
+  else if (power >= 4) {
+    $('#power-high').removeClass('ion-ios-heart').addClass('ion-ios-heart-outline');
+  }
+  else if (power >2) {
+    $('#power-mid').removeClass('ion-ios-heart').addClass('ion-ios-heart-outline');
   }
   else if (power <= 0) {
+    $('#power-high').removeClass('ion-ios-heart').addClass('ion-ios-heart-outline');
+    $('#power-mid').removeClass('ion-ios-heart').addClass('ion-ios-heart-outline');
+    $('#power-low').removeClass('ion-ios-heart').addClass('ion-ios-heart-outline');
     // Game over!
+//    $('#power-low').removeClass('ion-ios-heart').addClass('ion-ios-heart-outline');
     power = 0;
     var dlg = $("#name-dialog");
     dlg.find(".modal-title").text("GAME OVER!");
@@ -41,7 +64,8 @@ function changePower(p) {
     });
     dlg.modal("show");
   }
-  $("#power").text("Power: " + power);
+  $("#power-text").text("Power: ");
+  // $("#power-value").text(power);
 }
 
 function showLetters() {
@@ -115,6 +139,7 @@ function getNewSecretWord() {
         wordLookup(wordObj.word, function(descr) {
           var randomWordObj = { word : wordObj.word, description : descr };
           console.log('randomWordObj' , randomWordObj);
+          $("#word-description").text(randomWordObj.description);
           //response.send(JSON.stringify(randomWordObj));
         });
       //});
@@ -135,6 +160,11 @@ function getNewSecretWord() {
       wordAreaTable.last().append(tableCells);
     }
     $(".word-area td").click(function() {
+
+      if(window.cordova && window.cordova.plugins.Keyboard) {
+        cordova.plugins.Keyboard.show();
+      }
+
       var index = $(this).index();
       if (letters[index] === "?") {
         $(".word-area td").removeClass("cell-selected");
@@ -206,9 +236,12 @@ function populatePage() {
       decreasePower(1, true);
   });
 
+
   // Handle keyboard input
-  document.onkeypress = function (e) {
+  document.onkeyup = function (e) {
+  // document.onkeypress = function (e) {
     var c = String.fromCharCode(e.which);
+    console.log(e);
     var cells = $(".word-area td");
     for (var i = 0; i < cells.length; i++) {
       if ($(cells[i]).hasClass("cell-selected")) {
